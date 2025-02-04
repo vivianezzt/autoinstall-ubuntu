@@ -1,0 +1,105 @@
+#cloud-config
+autoinstall:
+  version: 1
+  identity:
+    realname: 'Viviane'
+    hostname: ubuntu-desktop
+    username: viviane
+    password: '$y$j9T$9gKaOtwnGtcdIbrzB.uMx0$4bS3bYLLaksyHCQkxmvS3gnunbVtcfjYU6Iy9kAa/c'
+  locale: pt_BR.utf8
+  keyboard:
+    layout: br
+  timezone: "America/Sao_Paulo"
+  packages:
+    # Pacotes gerais
+    - libreoffice
+    - gimp
+    - git
+    - wget
+    - build-essential
+    - python3
+    - nodejs
+    - docker
+    - vim
+    - curl
+    - openssh-server
+    - net-tools
+    - htop
+    - tmux
+    - unzip
+    - rsync
+    - vlc
+    - ffmpeg
+    - audacity
+    - thunderbird
+    - evince
+    - ufw
+    - fail2ban
+    - chromium-browser
+    - firefox
+    - gnome-tweaks
+    - zsh
+    - oh-my-zsh
+    - ruby-full
+    - maven
+    - golang
+
+    # Ferramentas de Cybersecurity
+    - nmap
+    - wireshark
+    - john
+    - hydra
+    - metasploit-framework
+    - aircrack-ng
+    - sqlmap
+    - nikto
+    - openvas
+    - clamav
+    - binwalk
+
+  snaps:
+    - name: spotify
+      channel: stable
+      classic: false
+    - name: maltego
+      channel: stable
+      classic: false
+    - name: burp-suite
+      channel: stable
+      classic: false
+
+  codecs:
+    install: true
+  drivers:
+    install: true
+  updates: all
+  shutdown: reboot
+
+  # Configurações adicionais para VS Code, IntelliJ, Go e Rust
+  early-commands:
+    - curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor -o /usr/share/keyrings/microsoft-archive-keyring.gpg
+    - echo "deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft-archive-keyring.gpg] https://packages.microsoft.com/repos/vscode stable main" > /etc/apt/sources.list.d/vscode.list
+    - apt-get update
+
+  packages:
+    - code
+
+  late-commands:
+    # Instalação do IntelliJ Community
+    - wget https://download.jetbrains.com/idea/ideaIC-2023.2.tar.gz -O /tmp/ideaIC.tar.gz
+    - tar -xzf /tmp/ideaIC.tar.gz -C /opt
+    - ln -s /opt/idea-IC-*/bin/idea.sh /usr/local/bin/idea
+
+    # Instalação do Go (Golang) mais recente
+    - wget https://go.dev/dl/go1.21.0.linux-amd64.tar.gz -O /tmp/go.tar.gz
+    - tar -C /usr/local -xzf /tmp/go.tar.gz
+    - echo 'export PATH=$PATH:/usr/local/go/bin' >> /etc/profile
+
+    # Instalação do Rust
+    - curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+    - echo 'export PATH=$PATH:$HOME/.cargo/bin' >> /etc/profile
+
+    # Instalação do Ghidra (ferramenta de engenharia reversa)
+    - wget https://github.com/NationalSecurityAgency/ghidra/releases/download/Ghidra_10.3.2_build/ghidra_10.3.2_PUBLIC_20230208.zip -O /tmp/ghidra.zip
+    - unzip /tmp/ghidra.zip -d /opt
+    - ln -s /opt/ghidra_10.3.2_PUBLIC/ghidraRun /usr/local/bin/ghidra
