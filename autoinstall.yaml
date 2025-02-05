@@ -5,57 +5,63 @@ autoinstall:
     realname: 'Viviane'
     hostname: ubuntu-desktop
     username: viviane
-    password: '$y$j9T$9gKaOtwnGtcdIbrzB.uMx0$4bS3bYLLaksyHCQkxmvS3gnunbVtcfjYU6Iy9kAa/c'
+    password: '$y$j9T$9gKaOtwnGtcdIbrzB.uMx0$4bS3bYLLaksyHCQkxmvS3gnunbVtcfjYU6Iy9kAa/c' # ATENÇÃO: Isso é inseguro!
   locale: pt_BR.utf8
   keyboard:
     layout: br
   timezone: "America/Sao_Paulo"
-  storage:
-    layout:
-      name: lvm
-    config:
-      - type: disk
-        id: disk-sda
-        path: /dev/sda  # Substitua pelo nome correto do seu disco
-        ptable: gpt
-        wipe: superblock
-      - type: partition
-        id: partition-boot
-        device: disk-sda
-        size: 512M
-        flag: boot
-      - type: partition
-        id: partition-root
-        device: disk-sda
-        size: 20G
-      - type: partition
-        id: partition-home
-        device: disk-sda
-        size: -1  # Usa o restante do espaço
-      - type: format
-        id: format-boot
-        volume: partition-boot
-        fstype: ext4
-      - type: format
-        id: format-root
-        volume: partition-root
-        fstype: ext4
-      - type: format
-        id: format-home
-        volume: partition-home
-        fstype: ext4
-      - type: mount
-        id: mount-boot
-        device: format-boot
-        path: /boot
-      - type: mount
-        id: mount-root
-        device: format-root
-        path: /
-      - type: mount
-        id: mount-home
-        device: format-home
-        path: /home
+config:
+  - type: disk
+    id: disk-sdc # Identificador do disco (verifique /dev/sdc com lsblk)
+    path: /dev/sdc # Caminho para o disco (verifique com lsblk)
+    ptable: gpt
+    wipe: superblock # CUIDADO: Apaga todos os dados do disco!
+
+  - type: partition
+    id: partition-boot
+    device: disk-sdc
+    size: 1G # Tamanho adequado para a partição de boot
+    flag: boot
+
+  - type: partition
+    id: partition-root
+    device: disk-sdc
+    size: 80G # Tamanho adequado para a partição raiz
+
+  - type: partition
+    id: partition-home
+    device: disk-sdc
+    size: -1 # Usa o espaço restante para a partição /home
+
+  - type: format
+    id: format-boot
+    volume: partition-boot
+    fstype: ext4
+
+  - type: format
+    id: format-root
+    volume: partition-root
+    fstype: ext4
+
+  - type: format
+    id: format-home
+    volume: partition-home
+    fstype: ext4
+
+  - type: mount
+    id: mount-boot
+    device: format-boot
+    path: /boot
+
+  - type: mount
+    id: mount-root
+    device: format-root
+    path: /
+
+  - type: mount
+    id: mount-home
+    device: format-home
+    path: /home
   packages:
     - libreoffice
     - gimp
