@@ -7,8 +7,9 @@ autoinstall:
     username: viviane
     password: '$y$j9T$9gKaOtwnGtcdIbrzB.uMx0$4bS3bYLLaksyHCQkxmvS3gnunbVtcfjYU6Iy9kAa/c' # ATENÇÃO: Isso é inseguro!
   locale: pt_BR.utf8
-  keyboard:
+  keyboard: br
     layout: br
+    variant: abnt2
   timezone: "America/Sao_Paulo"
 config:
   - type: disk
