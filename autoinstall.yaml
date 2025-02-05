@@ -17,23 +17,22 @@ autoinstall:
     layout:
     config:
       - type: disk
-        id: disk-nvme0n1  # ID para referencia
-        path: /dev/nvme0n1 # Caminho CORRETO para o seu disco NVMe
+        id: disk-nvme0n1
+        path: /dev/nvme0n1
         ptable: gpt
-        # REMOVA O WIPE: superblock.  ISSO APAGA SEUS DADOS DO WINDOWS!
       - type: partition
         id: partition-boot
-        device: disk-nvme0n1 # Use o ID do disco NVMe
+        device: disk-nvme0n1
         size: 1G
         flag: boot
       - type: partition
         id: partition-root
-        device: disk-nvme0n1 # Use o ID do disco NVMe
+        device: disk-nvme0n1
         size: 80G
       - type: partition
         id: partition-home
-        device: disk-nvme0n1 # Use o ID do disco NVMe
-        size: -1 # Use o espaço restante
+        device: disk-nvme0n1
+        size: -1
       - type: format
         id: format-boot
         volume: partition-boot
@@ -91,8 +90,7 @@ autoinstall:
     - ruby-full
     - maven
     - golang
-    - snapd # Instale o snapd aqui para garantir
-
+    - snapd
   snaps:
     - name: spotify
       channel: stable
@@ -103,61 +101,43 @@ autoinstall:
     - name: burp-suite
       channel: stable
       classic: false
-
   codecs:
     install: true
   drivers:
     install: true
   updates: all
-  shutdown: reboot
-
   late-commands:
-    - apt-get update && apt-get upgrade -y # Atualize após instalar os pacotes
-
+    - apt-get update && apt-get upgrade -y
     - chsh -s /usr/bin/zsh viviane
     - sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
     - git config --global user.name "Viviane"
     - git config --global user.email "vivianeaguiarc@outlook.com"
-
     - usermod -aG docker viviane
-
     - ufw allow ssh
     - ufw allow http
     - ufw allow https
     - ufw enable
-
-    # VS Code (usando o repositório oficial)
     - wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /usr/share/keyrings/microsoft-archive-keyring.gpg
     - echo "deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft-archive-keyring.gpg] https://packages.microsoft.com/repos/vscode stable main" > /etc/apt/sources.list.d/vscode.list
     - apt-get update && apt-get install -y code
-
-    # Chrome (adicionando o repositório e instalando)
     - wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
     - echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list
     - apt-get update && apt-get install -y google-chrome-stable
-
     - fallocate -l 2G /swapfile
     - chmod 600 /swapfile
     - mkswap /swapfile
     - swapon /swapfile
     - echo '/swapfile none swap sw 0 0' >> /etc/fstab
-
     - apt-get autoremove -y
     - apt-get clean
-
     - timedatectl set-timezone America/Sao_Paulo
     - apt-get install -y ntp
     - systemctl enable ntp
     - systemctl start ntp
-
-    # Rust e SDKMAN (após a instalação do Ubuntu)
     - curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
     - curl -s "https://get.sdkman.io" | bash
-
-    # SSH (desabilitando autenticação por senha - faça isso DEPOIS de configurar as chaves SSH)
     - sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin no/' /etc/ssh/sshd_config
     - sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
     - systemctl restart ssh
-
     - echo "alias ll='ls -la'" >> /home/viviane/.zshrc
     - echo "alias update='sudo apt-get update && sudo apt-get upgrade -y'" >> /home/viviane/.zshrc
