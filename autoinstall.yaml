@@ -10,8 +10,53 @@ autoinstall:
   keyboard:
     layout: br
   timezone: "America/Sao_Paulo"
+  storage:
+    layout:
+      name: lvm
+    config:
+      - type: disk
+        id: disk-sda
+        path: /dev/sda  # Substitua pelo nome correto do seu disco
+        ptable: gpt
+        wipe: superblock
+      - type: partition
+        id: partition-boot
+        device: disk-sda
+        size: 512M
+        flag: boot
+      - type: partition
+        id: partition-root
+        device: disk-sda
+        size: 20G
+      - type: partition
+        id: partition-home
+        device: disk-sda
+        size: -1  # Usa o restante do espaço
+      - type: format
+        id: format-boot
+        volume: partition-boot
+        fstype: ext4
+      - type: format
+        id: format-root
+        volume: partition-root
+        fstype: ext4
+      - type: format
+        id: format-home
+        volume: partition-home
+        fstype: ext4
+      - type: mount
+        id: mount-boot
+        device: format-boot
+        path: /boot
+      - type: mount
+        id: mount-root
+        device: format-root
+        path: /
+      - type: mount
+        id: mount-home
+        device: format-home
+        path: /home
   packages:
-    # Pacotes gerais
     - libreoffice
     - gimp
     - git
@@ -24,6 +69,7 @@ autoinstall:
     - curl
     - openssh-server
     - net-tools
+    - nmap
     - htop
     - tmux
     - unzip
@@ -43,20 +89,6 @@ autoinstall:
     - ruby-full
     - maven
     - golang
-
-    # Ferramentas de Cybersecurity
-    - nmap
-    - wireshark
-    - john
-    - hydra
-    - metasploit-framework
-    - aircrack-ng
-    - sqlmap
-    - nikto
-    - openvas
-    - clamav
-    - binwalk
-
   snaps:
     - name: spotify
       channel: stable
@@ -67,7 +99,6 @@ autoinstall:
     - name: burp-suite
       channel: stable
       classic: false
-
   codecs:
     install: true
   drivers:
@@ -75,31 +106,45 @@ autoinstall:
   updates: all
   shutdown: reboot
 
-  # Configurações adicionais para VS Code, IntelliJ, Go e Rust
-  early-commands:
-    - curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor -o /usr/share/keyrings/microsoft-archive-keyring.gpg
-    - echo "deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft-archive-keyring.gpg] https://packages.microsoft.com/repos/vscode stable main" > /etc/apt/sources.list.d/vscode.list
-    - apt-get update
-
-  packages:
-    - code
-
+  # Seção late-commands
   late-commands:
-    # Instalação do IntelliJ Community
-    - wget https://download.jetbrains.com/idea/ideaIC-2023.2.tar.gz -O /tmp/ideaIC.tar.gz
-    - tar -xzf /tmp/ideaIC.tar.gz -C /opt
-    - ln -s /opt/idea-IC-*/bin/idea.sh /usr/local/bin/idea
-
-    # Instalação do Go (Golang) mais recente
-    - wget https://go.dev/dl/go1.21.0.linux-amd64.tar.gz -O /tmp/go.tar.gz
-    - tar -C /usr/local -xzf /tmp/go.tar.gz
-    - echo 'export PATH=$PATH:/usr/local/go/bin' >> /etc/profile
-
-    # Instalação do Rust
+    - apt-get update && apt-get upgrade -y
+    - apt-get install -y htop neofetch tmux curl git
+    - chsh -s /usr/bin/zsh viviane
+    - sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+    - git config --global user.name "Viviane"
+    - git config --global user.email "vivianeaguiarc@outlook.com"
+    - curl -fsSL https://get.docker.com -o get-docker.sh
+    - sh get-docker.sh
+    - usermod -aG docker viviane
+    - ufw allow ssh
+    - ufw allow http
+    - ufw allow https
+    - ufw enable
+    - wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /usr/share/keyrings/microsoft-archive-keyring.gpg
+    - echo "deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft-archive-keyring.gpg] https://packages.microsoft.com/repos/vscode stable main" > /etc/apt/sources.list.d/vscode.list
+    - apt-get update && apt-get install -y code
+    - wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb -O /tmp/chrome.deb
+    - apt-get install -y /tmp/chrome.deb
+    - fallocate -l 2G /swapfile
+    - chmod 600 /swapfile
+    - mkswap /swapfile
+    - swapon /swapfile
+    - echo '/swapfile none swap sw 0 0' >> /etc/fstab
+    - apt-get autoremove -y
+    - apt-get clean
+    - timedatectl set-timezone America/Sao_Paulo
+    - apt-get install -y ntp
+    - systemctl enable ntp
+    - systemctl start ntp
+    - apt-get install -y snapd
+    - snap install spotify
+    - snap install slack --classic
+    - echo "alias ll='ls -la'" >> /home/viviane/.zshrc
+    - echo "alias update='sudo apt-get update && sudo apt-get upgrade -y'" >> /home/viviane/.zshrc
+    - apt-get install -y golang
     - curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-    - echo 'export PATH=$PATH:$HOME/.cargo/bin' >> /etc/profile
-
-    # Instalação do Ghidra (ferramenta de engenharia reversa)
-    - wget https://github.com/NationalSecurityAgency/ghidra/releases/download/Ghidra_10.3.2_build/ghidra_10.3.2_PUBLIC_20230208.zip -O /tmp/ghidra.zip
-    - unzip /tmp/ghidra.zip -d /opt
-    - ln -s /opt/ghidra_10.3.2_PUBLIC/ghidraRun /usr/local/bin/ghidra
+    - curl -s "https://get.sdkman.io" | bash
+    - sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin no/' /etc/ssh/sshd_config
+    - sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
+    - systemctl restart ssh
