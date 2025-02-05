@@ -3,66 +3,61 @@ autoinstall:
   version: 1
   identity:
     realname: 'Viviane'
+    sudo: ALL=(ALL) NOPASSWD: ALL
+    shell: /usr/bin/zsh
     hostname: ubuntu-desktop
     username: viviane
-    password: '$y$j9T$9gKaOtwnGtcdIbrzB.uMx0$4bS3bYLLaksyHCQkxmvS3gnunbVtcfjYU6Iy9kAa/c' # ATENÇÃO: Isso é inseguro!
+    password: '$y$j9T$tBtFfe7XLdgsWm1FHFmkq/$gz1Fw/XVRcf5RsiMZN5n8gbMZSVL/YbGaX/6cBQ/PK5'
   locale: pt_BR.utf8
-  keyboard: br
+  keyboard:
     layout: br
     variant: abnt2
   timezone: "America/Sao_Paulo"
-config:
-  - type: disk
-    id: disk-sdc # Identificador do disco (verifique /dev/sdc com lsblk)
-    path: /dev/sdc # Caminho para o disco (verifique com lsblk)
-    ptable: gpt
-    wipe: superblock # CUIDADO: Apaga todos os dados do disco!
-
-  - type: partition
-    id: partition-boot
-    device: disk-sdc
-    size: 1G # Tamanho adequado para a partição de boot
-    flag: boot
-
-  - type: partition
-    id: partition-root
-    device: disk-sdc
-    size: 80G # Tamanho adequado para a partição raiz
-
-  - type: partition
-    id: partition-home
-    device: disk-sdc
-    size: -1 # Usa o espaço restante para a partição /home
-
-  - type: format
-    id: format-boot
-    volume: partition-boot
-    fstype: ext4
-
-  - type: format
-    id: format-root
-    volume: partition-root
-    fstype: ext4
-
-  - type: format
-    id: format-home
-    volume: partition-home
-    fstype: ext4
-
-  - type: mount
-    id: mount-boot
-    device: format-boot
-    path: /boot
-
-  - type: mount
-    id: mount-root
-    device: format-root
-    path: /
-
-  - type: mount
-    id: mount-home
-    device: format-home
-    path: /home
+  storage:
+    layout:
+    config:
+      - type: disk
+        id: disk-nvme0n1  # ID para referencia
+        path: /dev/nvme0n1 # Caminho CORRETO para o seu disco NVMe
+        ptable: gpt
+        # REMOVA O WIPE: superblock.  ISSO APAGA SEUS DADOS DO WINDOWS!
+      - type: partition
+        id: partition-boot
+        device: disk-nvme0n1 # Use o ID do disco NVMe
+        size: 1G
+        flag: boot
+      - type: partition
+        id: partition-root
+        device: disk-nvme0n1 # Use o ID do disco NVMe
+        size: 80G
+      - type: partition
+        id: partition-home
+        device: disk-nvme0n1 # Use o ID do disco NVMe
+        size: -1 # Use o espaço restante
+      - type: format
+        id: format-boot
+        volume: partition-boot
+        fstype: ext4
+      - type: format
+        id: format-root
+        volume: partition-root
+        fstype: ext4
+      - type: format
+        id: format-home
+        volume: partition-home
+        fstype: ext4
+      - type: mount
+        id: mount-boot
+        device: format-boot
+        path: /boot
+      - type: mount
+        id: mount-root
+        device: format-root
+        path: /
+      - type: mount
+        id: mount-home
+        device: format-home
+        path: /home
   packages:
     - libreoffice
     - gimp
@@ -96,6 +91,8 @@ config:
     - ruby-full
     - maven
     - golang
+    - snapd # Instale o snapd aqui para garantir
+
   snaps:
     - name: spotify
       channel: stable
@@ -106,6 +103,7 @@ config:
     - name: burp-suite
       channel: stable
       classic: false
+
   codecs:
     install: true
   drivers:
@@ -113,45 +111,53 @@ config:
   updates: all
   shutdown: reboot
 
-  # Seção late-commands
   late-commands:
-    - apt-get update && apt-get upgrade -y
-    - apt-get install -y htop neofetch tmux curl git
+    - apt-get update && apt-get upgrade -y # Atualize após instalar os pacotes
+
     - chsh -s /usr/bin/zsh viviane
     - sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
     - git config --global user.name "Viviane"
     - git config --global user.email "vivianeaguiarc@outlook.com"
-    - curl -fsSL https://get.docker.com -o get-docker.sh
-    - sh get-docker.sh
+
     - usermod -aG docker viviane
+
     - ufw allow ssh
     - ufw allow http
     - ufw allow https
     - ufw enable
+
+    # VS Code (usando o repositório oficial)
     - wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /usr/share/keyrings/microsoft-archive-keyring.gpg
     - echo "deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft-archive-keyring.gpg] https://packages.microsoft.com/repos/vscode stable main" > /etc/apt/sources.list.d/vscode.list
     - apt-get update && apt-get install -y code
-    - wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb -O /tmp/chrome.deb
-    - apt-get install -y /tmp/chrome.deb
+
+    # Chrome (adicionando o repositório e instalando)
+    - wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+    - echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list
+    - apt-get update && apt-get install -y google-chrome-stable
+
     - fallocate -l 2G /swapfile
     - chmod 600 /swapfile
     - mkswap /swapfile
     - swapon /swapfile
     - echo '/swapfile none swap sw 0 0' >> /etc/fstab
+
     - apt-get autoremove -y
     - apt-get clean
+
     - timedatectl set-timezone America/Sao_Paulo
     - apt-get install -y ntp
     - systemctl enable ntp
     - systemctl start ntp
-    - apt-get install -y snapd
-    - snap install spotify
-    - snap install slack --classic
-    - echo "alias ll='ls -la'" >> /home/viviane/.zshrc
-    - echo "alias update='sudo apt-get update && sudo apt-get upgrade -y'" >> /home/viviane/.zshrc
-    - apt-get install -y golang
+
+    # Rust e SDKMAN (após a instalação do Ubuntu)
     - curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
     - curl -s "https://get.sdkman.io" | bash
+
+    # SSH (desabilitando autenticação por senha - faça isso DEPOIS de configurar as chaves SSH)
     - sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin no/' /etc/ssh/sshd_config
     - sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
     - systemctl restart ssh
+
+    - echo "alias ll='ls -la'" >> /home/viviane/.zshrc
+    - echo "alias update='sudo apt-get update && sudo apt-get upgrade -y'" >> /home/viviane/.zshrc
